@@ -7,9 +7,11 @@ import (
 	"io/ioutil"
 	"encoding/json"
 	"net/url"
+	"github.com/mrjones/oauth"
+	"bytes"
 )
 
-type TrelloWebhook struct {
+type Webhook struct {
 	ID          string   `json:"id"`
 	Description string   `json:"description"`
 	IDModel     string   `json:"idModel"`
@@ -17,19 +19,34 @@ type TrelloWebhook struct {
 	Active      bool     `json:"active"`
 }
 
-func CreateTrelloWebhook(callback_url string, id_model string, description string, webhookData *TrelloWebhook) error{
-	req, err := http.NewRequest("POST", "https://trello.com/1/webhooks", nil)
-	if err != nil {
-		log.Print(err)
-		return err
+type WebhookFactory struct {
+	c *oauth.Consumer
+	a *oauth.AccessToken
+}
+
+func NewWebhookFactory(c *oauth.Consumer, a *oauth.AccessToken) * WebhookFactory{
+	return &WebhookFactory{
+		c: c,
+		a: a,
 	}
+}
+
+func (w *WebhookFactory) CreateTrelloWebhook(callback_url string, id_model string, description string, webhookData *Webhook) error{
 	form := url.Values{}
 	form.Add("description", description)
 	form.Add("callbackURL", callback_url)
 	form.Add("idModel", id_model)
-	req.PostForm = form
+	queryData := form.Encode()
+	req, err := http.NewRequest("POST", "https://trello.com/1/webhooks", bytes.NewBuffer([]byte(queryData)))
+	if err != nil {
+		log.Print(err)
+		return err
+	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	client := &http.Client{}
+	client, err := w.c.MakeHttpClient(w.a)
+	if err != nil {
+		log.Fatal(err)
+	}
 	resp, err := client.Do(req)
 	//fmt.Println(resp.Status)
 	defer resp.Body.Close()
@@ -47,18 +64,18 @@ func CreateTrelloWebhook(callback_url string, id_model string, description strin
 	return err
 }
 
-func DeleteTrelloWebhook () {
+func (w *WebhookFactory) DeleteTrelloWebhook () {
 
 }
 
-func UpdateTrelloWebhook() {
+func (w *WebhookFactory) UpdateTrelloWebhook() {
 
 }
 
-func GetAllTrelloWebhooks () {
+func (w *WebhookFactory) GetAllTrelloWebhooks () {
 
 }
 
-func GetTrelloWebhook () {
+func (w *WebhookFactory) GetTrelloWebhook () {
 
 }
