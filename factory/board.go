@@ -19,29 +19,29 @@ type Board struct {
 		Emoji struct{} `json:"emoji"`
 	} `json:"descData"`
 	Closed         bool   `json:"closed"`
-	IdOrganization string `json:"idOrganization"`
+	IdOrganization string `json:"idOrganization" bson:"idOrganization"`
 	Pinned         bool   `json:"pinned"`
 	Url            string `json:"url"`
-	ShortUrl       string `json:"shortUrl"`
+	ShortUrl       string `json:"shortUrl" bson:"shortUrl"`
 	Prefs          struct {
-		PermissionLevel       string            `json:"permissionLevel"`
+		PermissionLevel       string            `json:"permissionLevel" bson:"permissionLevel"`
 		Voting                string            `json:"voting"`
 		Comments              string            `json:"comments"`
 		Invitations           string            `json:"invitations"`
 		SelfJoin              bool              `json:"selfjoin"`
-		CardCovers            bool              `json:"cardCovers"`
-		CardAging             string            `json:"cardAging"`
-		CalendarFeedEnabled   bool              `json:"calendarFeedEnabled"`
+		CardCovers            bool              `json:"cardCovers" bson:"cardCovers"`
+		CardAging             string            `json:"cardAging" bson:"cardAGing"`
+		CalendarFeedEnabled   bool              `json:"calendarFeedEnabled" bson:"calendarFeedEnabled"`
 		Background            string            `json:"background"`
-		BackgroundColor       string            `json:"backgroundColor"`
-		BackgroundImage       string            `json:"backgroundImage"`
-		BackgroundImageScaled []BoardBackground `json:"backgroundImageScaled"`
-		BackgroundTile        bool              `json:"backgroundTile"`
-		BackgroundBrightness  string            `json:"backgroundBrightness"`
-		CanBePublic           bool              `json:"canBePublic"`
-		CanBeOrg              bool              `json:"canBeOrg"`
-		CanBePrivate          bool              `json:"canBePrivate"`
-		CanInvite             bool              `json:"canInvite"`
+		BackgroundColor       string            `json:"backgroundColor" bson:"backgroundColor"`
+		BackgroundImage       string            `json:"backgroundImage" bson:"backgroundImage"`
+		BackgroundImageScaled []BoardBackground `json:"backgroundImageScaled" bson:"backgroundImageScaled"`
+		BackgroundTile        bool              `json:"backgroundTile" bson:"backgroundTile"`
+		BackgroundBrightness  string            `json:"backgroundBrightness" bson:"backgroundBrightness"`
+		CanBePublic           bool              `json:"canBePublic" bson:"canBePublic"`
+		CanBeOrg              bool              `json:"canBeOrg" bson:"canBeOrg"`
+		CanBePrivate          bool              `json:"canBePrivate" bson:"canBePrivate"`
+		CanInvite             bool              `json:"canInvite" bson:"canInvite"`
 	} `json:"prefs"`
 	LabelNames struct {
 		Red    string `json:"red"`
@@ -50,7 +50,7 @@ type Board struct {
 		Green  string `json:"green"`
 		Blue   string `json:"blue"`
 		Purple string `json:"purple"`
-	} `json:"labelNames"`
+	} `json:"labelNames" bson:"labelNames"`
 }
 
 type BoardBackground struct {
@@ -79,7 +79,7 @@ func (b *BoardFactory) CreateTrelloBoard (name string, description string, trell
 	form.Add("defaultLists", "false")
 	form.Add("idOrganization", trello_org_id)
 	queryData := form.Encode()
-	req, err := http.NewRequest("POST", "https://trello.com/1/organizations", bytes.NewBuffer([]byte(queryData)))
+	req, err := http.NewRequest("POST", "https://trello.com/1/boards", bytes.NewBuffer([]byte(queryData)))
 	if err != nil {
 		log.Print(err)
 		return err
