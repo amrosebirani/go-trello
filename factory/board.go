@@ -1,14 +1,14 @@
 package factory
 
 import (
-	"github.com/mrjones/oauth"
-	"net/url"
-	"net/http"
 	"bytes"
-	"log"
-	"io/ioutil"
-	"fmt"
 	"encoding/json"
+	"fmt"
+	"github.com/mrjones/oauth"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"net/url"
 )
 
 type Board struct {
@@ -59,20 +59,19 @@ type BoardBackground struct {
 	url    string `json:"url"`
 }
 
-
 type BoardFactory struct {
 	c *oauth.Consumer
 	a *oauth.AccessToken
 }
 
-func NewBoardFactory(c *oauth.Consumer, a *oauth.AccessToken) * BoardFactory{
+func NewBoardFactory(c *oauth.Consumer, a *oauth.AccessToken) *BoardFactory {
 	return &BoardFactory{
 		c: c,
 		a: a,
 	}
 }
 
-func (b *BoardFactory) CreateTrelloBoard (name string, description string, trello_org_id string, boardData *Board) error{
+func (b *BoardFactory) CreateTrelloBoard(name string, description string, trello_org_id string, boardData *Board) error {
 	form := url.Values{}
 	form.Add("desc", description)
 	form.Add("name", name)
@@ -99,8 +98,59 @@ func (b *BoardFactory) CreateTrelloBoard (name string, description string, trell
 		fmt.Println(err)
 		return err
 	}
-
 	err = json.Unmarshal(htmlData, boardData)
 	return err
+}
 
+func (b *BoardFactory) AddMemberToBoard(memberName, memberEmail, boardId string) error {
+	f := url.Values{}
+	f.Add("email", memberEmail)
+	f.Add("fullName", memberName)
+	form := f.Encode()
+	url := fmt.Sprintf("https://api.trello.com/1/boards/%v/members", boardId)
+	req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer([]byte(form)))
+	if err != nil {
+		fmt.Printf("API request to trello failed: %v\n", err)
+		return err
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	client, err := b.c.MakeHttpClient(b.a)
+	if err != nil {
+		return fmt.Errorf("API request to trello failed: %v", err)
+	}
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return fmt.Errorf("Error while parsing response: %v", err)
+		}
+		return fmt.Errorf("%v", string(body))
+	}
+	return nil
+}
+
+func (b *BoardFactory) RemoveMemberFromBoard(trelloUsername, boardId string) error {
+
+	url := fmt.Sprintf("https://api.trello.com/1/boards/%v/members/%v", boardId, trelloUsername)
+	req, err := http.NewRequest(http.MethodDelete, url, nil)
+	if err != nil {
+		fmt.Printf("API request to trello failed: %v\n", err)
+		return err
+	}
+	client, err := b.c.MakeHttpClient(b.a)
+	if err != nil {
+		return fmt.Errorf("API request to trello failed: %v", err)
+	}
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return fmt.Errorf("Error while parsing response: %v", err)
+		}
+		return fmt.Errorf("%v", string(body))
+	}
+	return nil
 }
